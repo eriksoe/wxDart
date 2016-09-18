@@ -1,14 +1,19 @@
 CPPFLAGS=-Wall -ggdb `wx-config --cppflags`
 LDFLAGS=-Wall -ggdb  `wx-config --libs`
 
-smoketest: libwxdart.so wxdart.dart
+smoketest: lib/libwxdart.so lib/wxdart.dart
 	dart smoketest.dart
 
-libwxdart.so: wxdart.o
+lib/libwxdart.so: lib/wxdart.o
+	echo "A: $<"
+	echo "B: $+"
 	gcc ${LDFLAGS} -shared -m64 -Wl,-soname,$@.so -o "$@" $< ${LDFLAGS}
+
 %.o: %.cpp
-	g++ ${CPPFLAGS} -fPIC -m64 -I/usr/lib/dart/include -DDART_SHARED_LIB -c wxdart.cpp
+	echo "A: $<"
+	echo "B: $+"
+	g++ ${CPPFLAGS} -fPIC -m64 -I/usr/lib/dart/include -DDART_SHARED_LIB -c $< -o "$@"
 
 clean:
-	rm -fv *.o *.so
+	rm -fv lib/*.o lib/*.so
 

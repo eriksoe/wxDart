@@ -1,4 +1,4 @@
-import 'wxdart.dart';
+import 'package:wxdart/wxdart.dart';
 
 void main() {
     print("Hello!");
