@@ -1,0 +1,9 @@
+
+# Generated files:
+*.o
+*.so
+*.dll
+
+# Backup files:
+*.bak
+*~
