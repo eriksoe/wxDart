@@ -1,0 +1,43 @@
+========== Memory management ==========
+
+To some Dart-side objects is associated a C++-side peer object.
+For example, a Frame is associated with a wxFrame, and a Window is associated with a wxWindow.
+Either of these objects may be be marked by deletion by their first,
+so the resource management can not be done in any which way.
+
+There are three scenarios to consider:
+
+1. C++-side, the wx window object is destroyed, either because it is a top-level window which is closed or destroyed, or because the widget is a child of another widget which is now destroyed, which causes all of its children to be destroyed as well.
+   Because we can't stop deletion because of parent destruction,
+   Dart objects will lose their C++ counterparts in this case.
+2. Dart-side, the window object is deleted because the garbage collector has determined it to be unreachable
+   2a. The wx window object has not been added to a container. It is to be deleted, because nothing refers to it any longer.
+   2b. The wx window object has been added to a container. It is not to be deleted, because the container has ownership of it.
+
+The resource life-cycle management on the two sides is done as follows:
+
+      Dart                            C++
+    +----------+                    +----------+
+    |          |  peer  +----+      |          |
+    | Dart obj.|------->|Peer|--w-->| C++ obj. |
+    |          |<--(w)--|    |      |          |
+    +----------+        +----+      +----------+
+
+- The Dart-side object has a peer (in Native Extension terminology).
+- The peer has a wxWeakRef to the C++-side object.
+- When the C++-side object is created, a WeakPersistentHandle is made for the
+  Dart-side object, with a deletion action which releases the C++-side object in case it is not already owned by a container.
+- The peer tracks whether the window is owned by a container or by the Dart object via the peer.
+
+
+== Event binding
+Event handling involves callback to Dart code (methods or closures).
+This is handled with a persistent handle to the Dart object, like this:
+
+      Dart              wxObject      C++
+    +----------+          ^             +----------+
+    |          |        +----+ callback |          |
+    | Dart obj.|<-(ph)--|Obj.|<---------| C++ obj. |
+    |          |        |    |          |          |
+    +----------+        +----+          +----------+
+
